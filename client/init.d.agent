@@ -1,0 +1,49 @@
+#! /bin/bash
+
+EXEC=/usr/bin/python
+PIDFILE=/var/run/nq-agent.pid
+CONF="/etc/nodequery/main.py"
+
+case "$1" in
+    start)
+        if [ -f "$PIDFILE" ]; then
+            echo "$PIDFILE exists, process is already running or crashed"
+        else
+            echo -n "Starting Redis server..."
+            nohup $EXEC $CONF >/dev/null 2>&1 &
+            if [ "$?"="0" ]; then
+                echo " done"
+            else
+                echo " failed"
+            fi
+        fi
+        ;;
+    stop)
+        if [ ! -f "$PIDFILE" ]; then
+            echo "$PIDFILE does not exist, process is not running"
+        else
+            PID=$(cat $PIDFILE)
+            echo "Stopping  Redis server..."
+            kill -9 "${PID}"
+            if [ "$?"="0" ]; then
+                echo " done"
+            else
+                echo " failed"
+            fi
+        fi
+        ;;
+    restart)
+        ${0} stop
+        ${0} start
+        ;;
+    status)
+        if [ -f "$PIDFILE" ]; then
+            echo "nq-agent server is running."
+        else
+            echo "nq-agent server is stopped."
+        fi
+        ;;
+  *)
+    echo "Usage: /etc/init.d/redis {start|stop|restart|status}" >&2
+        exit 1
+esac

@@ -145,9 +145,6 @@ tx=`echo $[($sent - $old_sent) / 1024]`
 # Average system load
 load=$(prep "$(cat /proc/loadavg | awk '{ print $1" "$2" "$3 }')")
 
-# Detailed system load calculation
-time=$(date +%s)
-
 # Get network latency
 # ping_eu=$(prep $(num "$(ping -c 2 -w 2 108.61.210.117 | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
 # ping_us=$(prep $(num "$(ping -c 2 -w 2 108.61.219.200 | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))

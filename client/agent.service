@@ -1,0 +1,11 @@
+[Unit]
+Description=nq-agent
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python /etc/nodequery/main.py
+ExecReload=/bin/kill -HUP $MAINPID
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
