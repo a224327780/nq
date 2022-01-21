@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
 
-from sanic import Sanic, text, json
+from sanic import Sanic, text, json, Request
+
+from _version import VERSION
 
 app = Sanic("nq")
+app.static("/nq-agent", "client")
 
 
 def add_cors_headers(request, response):
@@ -19,10 +22,12 @@ app.register_middleware(add_cors_headers, "response")
 
 
 @app.get("/install")
-async def install(request):
+async def install(request: Request):
     content_type = 'application/x-shellscript'
-    content = Path('scripts/install.sh').read_text()
-    return text(content, content_type=content_type)
+    host = request.url_for('home').strip('/')
+    params = f'version="{VERSION}"\nhost="{host}"'
+    content = Path('scripts/install.sh').read_text().replace('# params', params)
+    return text(f"{content}\n", content_type=content_type)
 
 
 @app.get("/uninstall")
@@ -32,7 +37,7 @@ async def uninstall(request):
     return text(content, content_type=content_type)
 
 
-@app.websocket("/")
+@app.websocket("/ws")
 async def ws_data(request, ws):
     while True:
         data = "hello!"
@@ -43,14 +48,21 @@ async def ws_data(request, ws):
 
 
 @app.get('/')
-async def home(request):
-    return text('')
+async def home(request: Request):
+    content = f"curl {request.url_for('install')} | sudo bash"
+    return text(content)
+
+
+@app.get('/check')
+async def check_update(request: Request):
+    return json({'code': 0, 'data': False})
 
 
 @app.get('/e')
 async def envs(request):
-    return json(dict(os.environ.items()))
+    print(request.url_for('home'))
+    return json(dict(os.environ.copy()))
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=os.getenv('PORT', 8080), debug=False, access_log=False)
+    app.run(host="0.0.0.0", port=os.getenv('PORT', 8080), debug=False, access_log=False, auto_reload=True)

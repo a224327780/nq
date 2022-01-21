@@ -1,5 +1,15 @@
 #! /bin/bash
 
+### BEGIN INIT INFO
+# Provides:          nq-agent
+# Required-Start:    $all
+# Required-Stop:     $all
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Server status monitoring
+# Description:       Start or stop the nq-agent Client
+### END INIT INFO
+
 EXEC=/usr/bin/python
 PIDFILE=/var/run/nq-agent.pid
 CONF="/etc/nodequery/main.py"
@@ -44,6 +54,6 @@ case "$1" in
         fi
         ;;
   *)
-    echo "Usage: /etc/init.d/redis {start|stop|restart|status}" >&2
+    echo "Usage: /etc/init.d/nq-agent {start|stop|restart|status}" >&2
         exit 1
 esac

@@ -4,7 +4,7 @@
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 # Agent version
-version="0.1"
+version="$(cat /etc/nodequery/version.txt)"
 
 # Prepare values
 function prep() {
@@ -128,13 +128,15 @@ fi
 
 # IP addresses and network usage
 #ipv4=$(prep "$(ip addr show $nic | grep 'inet ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^127' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
-ipv4=$(curl -s https://api.ipify.org/)
-ipv6=$(prep "$(ip addr show $nic | grep 'inet6 ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^::' | grep -v '^0000:' | grep -v '^fe80:' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
+if [ "$1" == "init" ]; then
+  ipv4=$(curl -s https://api.ipify.org/)
+  ipv6=$(prep "$(ip addr show $nic | grep 'inet6 ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^::' | grep -v '^0000:' | grep -v '^fe80:' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
+fi
 
 old_recv=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $3}'`
 old_sent=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $11}'`
 
-sleep 1
+sleep 2
 
 recv=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $3}'`
 sent=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $11}'`
@@ -151,7 +153,7 @@ load=$(prep "$(cat /proc/loadavg | awk '{ print $1" "$2" "$3 }')")
 # ping_as=$(prep $(num "$(ping -c 2 -w 2 45.32.100.168 | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
 
 # Build data for post
-data_post=$(base "$version|$uptime|$sessions|$processes|$processes_array|$os_kernel|$os_name|$os_arch|$cpu_name|$cpu_cores|$cpu_freq|$ram_total|$ram_usage|$swap_total|$swap_usage|$disk_array|$disk_total|$disk_usage|$connections|$nic|$ipv4|$ipv6|$rx|$tx|$load")
+data_post="$version|$uptime|$sessions|$processes|$processes_array|$os_kernel|$os_name|$os_arch|$cpu_name|$cpu_cores|$cpu_freq|$ram_total|$ram_usage|$swap_total|$swap_usage|$disk_array|$disk_total|$disk_usage|$connections|$nic|$ipv4|$ipv6|$rx|$tx|$load"
 echo $data_post
 
 # Finished
