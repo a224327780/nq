@@ -1,47 +1,25 @@
-import asyncio
 import hashlib
 import json
 import os
+from datetime import datetime, timedelta
 from pathlib import Path
 
+from motor.motor_asyncio import AsyncIOMotorClient
 from sanic import Sanic, text, Request
 from sanic import json as json_
 from sanic.log import logger
 
+from utils.common import get_bj_time, decode, progress, is_online, m_date
 from utils.log import DEFAULT_LOGGING
 from utils.version import VERSION
 
 app = Sanic("nq", log_config=DEFAULT_LOGGING)
-app.static("/nq-agent", "client")
-
-NQ_SERVER_PORT = os.getenv('NQ_SERVER_PORT', 15555)
-
-
-async def handle_client(reader, writer):
-    client_id = writer.get_extra_info('peername')
-    logger.info('Client connected: {}'.format(client_id))
-    while True:
-        request = (await reader.read(1024)).decode('utf8')
-        if not request or request == 'quit':
-            break
-        logger.info(request)
-        writer.write('we'.encode('utf-8'))
-        await writer.drain()
-    logger.info('close')
-    writer.close()
+mongo_uri = os.getenv('MONGO_URI')
+col_host_name = 'host'
+col_hosts_name = 'hosts'
 
 
-async def start_socket_server():
-    host = '127.0.0.1'
-    server = await asyncio.start_server(handle_client, host, NQ_SERVER_PORT)
-    logger.info(host)
-    async with server:
-        await server.serve_forever()
-
-
-app.add_task(start_socket_server())
-
-
+@app.middleware('response')
 def add_cors_headers(request, response):
     headers = {
         "Access-Control-Allow-Methods": "PUT, GET, POST, DELETE, OPTIONS",
@@ -51,18 +29,38 @@ def add_cors_headers(request, response):
     response.headers.extend(headers)
 
 
-app.register_middleware(add_cors_headers, "response")
+@app.before_server_start
+async def setup_db(_app, loop):
+    _app.ctx.mongo_client = AsyncIOMotorClient(mongo_uri)
+    _app.ctx.mongo_db = _app.ctx.mongo_client['db0']
+
+
+async def get_hosts():
+    db = app.ctx.mongo_db
+    col = db[col_hosts_name]
+    col_item = db[col_host_name]
+    data = []
+    async for item in col.find():
+        _id = item['_id']
+        host_item = await col_item.find_one({'token': _id}, sort=[('create_date', -1)])
+        if not host_item:
+            continue
+
+        host_item['ram_gap'] = progress(host_item['ram_usage'], host_item['ram_total'])
+        host_item['disk_gap'] = progress(host_item['disk_usage'], host_item['disk_total'])
+        host_item['load_gap'] = progress(host_item['load'].split(' ')[0], host_item['cpu_cores'])
+        host_item['is_online'] = is_online(host_item['create_date'])
+        host_item['m_date'] = m_date(host_item['create_date'])
+        data.append(item)
+    return {'code': 0, 'data': data, 'message': ''}
 
 
 @app.get("/install")
 async def install(request: Request):
     content_type = 'application/x-shellscript'
-    server = request.server_name
-    host = request.url_for('home').split('/')
-    params = f'version="{VERSION}"\nserver="{server}"\nport="{NQ_SERVER_PORT}"\nhost="{host}"'
-    content = Path('utils/get-install.sh').read_text()
-    content = content.replace('#env', params)
-    return text(f"{content}\n", content_type=content_type)
+    api = request.url_for('agent')
+    content = Path('scripts/install.sh').read_text().replace('API="$2"', f'API="{api}"')
+    return text(content, content_type=content_type)
 
 
 @app.get("/uninstall")
@@ -75,17 +73,13 @@ async def uninstall(request):
 @app.websocket("/ws")
 async def ws_data(request, ws):
     while True:
-        data = "hello!"
-        print("Sending: " + data)
-        await ws.send(data)
-        data = await ws.recv()
-        print("Received: " + data)
+        data = await get_hosts()
+        await ws.send(json.dumps(data))
 
 
 @app.get('/')
 async def home(request: Request):
-    content = f"curl {request.url_for('install')} | sudo bash"
-    return text(content)
+    return text('')
 
 
 @app.post('/add')
@@ -94,12 +88,53 @@ async def add_host(request: Request):
     m = hashlib.md5()
     m.update(name.encode('utf-8'))
     _id = m.hexdigest().upper()
-    host = {'name': name, 'id': _id}
-    host_file = Path('hosts') / f'{_id}.host'
-    host_file.write_text(json.dumps(host))
 
-    content = f"curl {request.url_for('install')} | sh -s {_id}"
-    return text(content)
+    db = app.ctx.mongo_db
+    col = db[col_hosts_name]
+    data = await col.find_one({'_id': _id})
+    if data:
+        return json_({'code': 1, 'message': f'{name} Already exists.', data: []})
+
+    host = {'name': name, 'id': _id}
+    await col.insert_one(host)
+
+    content = f"curl {request.url_for('install')} | bash {_id}"
+    return json_({'code': 0, 'message': '', data: content})
+
+
+@app.get('/hosts')
+async def hosts(request):
+    return json_(get_hosts())
+
+
+@app.post('/agent')
+async def agent(request: Request):
+    db = app.ctx.mongo_db
+    col = db[col_host_name]
+
+    data = decode(request.form.get('data'))
+    token = request.form.get('token')
+
+    day_1_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    await col.delete_many({'token': token, 'create_date': {'$lt': f'{day_1_ago}'}})
+
+    field_map = {
+        0: 'version', 1: 'uptime', 2: 'sessions', 3: 'processes',
+        4: 'processes_array', 5: 'os_kernel', 6: 'os_name', 7: 'os_arch',
+        8: 'cpu_name', 9: 'cpu_cores', 10: 'cpu_freq',
+        11: 'ram_total', 12: 'ram_usage', 13: 'swap_total', 14: 'swap_usage',
+        15: 'disk_total', 16: 'disk_usage', 17: 'connections', 18: 'nic',
+        19: 'ipv4', 20: 'ipv6', 21: 'rx', 22: 'tx', 23: 'load_cpu'}
+    save_data = {'create_date': get_bj_time(), 'token': token}
+    try:
+        for i, datum in enumerate(data.split('||')):
+            field = field_map.get(i)
+            if field:
+                save_data[field] = decode(datum)
+        await col.insert_one(save_data)
+    except Exception as e:
+        logger.exception(e)
+    return json_({'code': 0, 'data': [], 'message': ''})
 
 
 @app.get('/version')
