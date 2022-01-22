@@ -61,7 +61,7 @@ async def install(request: Request):
     content_type = 'application/x-shellscript'
     api = request.url_for('agent')
     content = Path('scripts/install.sh').read_text().replace('API="$2"', f'API="{api}"')
-    return text(content, content_type=content_type)
+    return text(f'{content}\n', content_type=content_type)
 
 
 @app.get("/uninstall")
@@ -80,7 +80,7 @@ async def ws_data(request, ws):
 
 @app.get('/')
 async def home(request: Request):
-    return json_([request.url, request.scheme, request.host, request.server_name])
+    return text(request.scheme)
 
 
 @app.post('/add')
