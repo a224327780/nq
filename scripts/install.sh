@@ -1,25 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # Set environment
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-# params
-
-# Prepare output
-echo -e "|\n|   NodeQuery Installer\n|   ===================\n|"
-
-# Root required
-if [ $(id -u) != "0" ];
-then
-	echo -e "|   Error: You need to be root to install the NodeQuery agent\n|"
-	echo -e "|          The agent itself will NOT be running as root but instead under its own non-privileged user\n|"
-	exit 1
-fi
-
 # Attempt to delete previous agent
 if [ -f /etc/nodequery/nq-agent.sh ]
 then
-	# Remove agent dir
 	if [ -f /etc/systemd/system/nq-agent.service ]; then
 	  systemctl stop nq-agent.service
     systemctl disable nq-agent.service
@@ -30,22 +16,17 @@ then
   rm -f /etc/systemd/system/nq-agent.service
 fi
 
-# Create agent dir
 mkdir -p /etc/nodequery
 
-# Download agent
 echo -e "|   Downloading agent.sh to /etc/nodequery"
+host="https://raw.githubusercontent.com/a224327780/nq/client"
 
-wget -nv -O /etc/nodequery/nq-agent.sh --no-check-certificate ${host}/nq-agent/agent.sh
+curl -k -s -o /etc/nodequery/nq-agent.sh ${host}/agent.sh
+curl -k -s -o /etc/nodequery/agent.py ${host}/agent.py
+curl -k -s -o /etc/systemd/system/nq-agent.service ${host}agent.service
+curl -k -s -o /etc/init.d/nq-agent ${host}/init.d.agent
 
-wget -nv -O /etc/nodequery/main.py --no-check-certificate ${host}/nq-agent/main.py
-
-wget -nv -O /etc/systemd/system/nq-agent.service --no-check-certificate ${host}/nq-agent/agent.service
-
-wget -nv -O /etc/init.d/nq-agent --no-check-certificate ${host}/nq-agent/init.d.agent
-
-echo $version > /etc/nodequery/version.txt
-echo $host > /etc/nodequery/host.txt
+echo -e "version = '$1'\nserver = '$2'\nport = '$3'\nhost = '$4'\ntoken = '$5'" > /etc/nodequery/agent_env.py
 
 if [ -f /etc/nodequery/nq-agent.sh ]
 then

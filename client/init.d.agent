@@ -12,7 +12,7 @@
 
 EXEC=/usr/bin/python
 PIDFILE=/var/run/nq-agent.pid
-CONF="/etc/nodequery/main.py"
+CONF="/etc/nodequery/agent.py"
 
 case "$1" in
     start)

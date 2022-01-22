@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env sh
 
 # Set environment
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
@@ -7,22 +7,22 @@ PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 version="$(cat /etc/nodequery/version.txt)"
 
 # Prepare values
-function prep() {
+prep() {
   echo "$1" | sed -e 's/^ *//g' -e 's/ *$//g' | sed -n '1 p'
 }
 
 # Base64 values
-function base() {
+base() {
   echo "$1" | tr -d '\n' | base64 | tr -d '=' | tr -d '\n' | sed 's/\//%2F/g' | sed 's/\+/%2B/g'
 }
 
 # Integer values
-function int() {
+int() {
   echo ${1/\.*/}
 }
 
 # Filter numeric
-function num() {
+num() {
   case $1 in
   '' | *[!0-9\.]*) echo 0 ;;
   *) echo $1 ;;
@@ -128,10 +128,8 @@ fi
 
 # IP addresses and network usage
 #ipv4=$(prep "$(ip addr show $nic | grep 'inet ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^127' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
-if [ "$1" == "init" ]; then
-  ipv4=$(curl -s https://api.ipify.org/)
-  ipv6=$(prep "$(ip addr show $nic | grep 'inet6 ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^::' | grep -v '^0000:' | grep -v '^fe80:' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
-fi
+#ipv4=$(curl -s https://api.ipify.org/)
+ipv6=$(prep "$(ip addr show $nic | grep 'inet6 ' | awk '{ print $2 }' | awk -F\/ '{ print $1 }' | grep -v '^::' | grep -v '^0000:' | grep -v '^fe80:' | awk '{ print $0 } END { if (!NR) print "N/A" }')")
 
 old_recv=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $3}'`
 old_sent=`cat /proc/net/dev | awk -F '[: ]+' '/'"$nic"'/{print $11}'`

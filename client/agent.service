@@ -3,7 +3,7 @@ Description=nq-agent
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python /etc/nodequery/main.py
+ExecStart=/usr/bin/python /etc/nodequery/agent.py
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=on-failure
 
