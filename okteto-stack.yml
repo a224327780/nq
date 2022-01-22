@@ -10,12 +10,12 @@ services:
     ports:
       - 8080
 
-#  admin-mongo:
-#    public: true
-#    image: adicom/admin-mongo
-#    replicas: 1
-#    environment:
-#      - PASSWORD=${MONGO_ROOT_PASSWORD}
-#      - PORT=8080
-#    ports:
-#      - 8080
+  admin-mongo:
+    public: true
+    image: adicom/admin-mongo
+    replicas: 1
+    environment:
+      - PASSWORD=${MONGO_ROOT_PASSWORD}
+      - PORT=8080
+    ports:
+      - 8080

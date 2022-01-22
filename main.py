@@ -14,7 +14,8 @@ from utils.log import DEFAULT_LOGGING
 from utils.version import VERSION
 
 app = Sanic("nq", log_config=DEFAULT_LOGGING)
-mongo_uri = os.getenv('MONGO_URI', 'mongodb+srv://root:hack3321!@cluster0.9v4wz.mongodb.net/?retryWrites=true&w=majority')
+mongo_uri = os.getenv('MONGO_URI',
+                      'mongodb+srv://root:hack3321!@cluster0.9v4wz.mongodb.net/?retryWrites=true&w=majority')
 col_host_name = 'host'
 col_hosts_name = 'hosts'
 
@@ -79,7 +80,7 @@ async def ws_data(request, ws):
 
 @app.get('/')
 async def home(request: Request):
-    return text('')
+    return json_([request.url, request.scheme, request.host, request.server_name])
 
 
 @app.post('/add')
@@ -99,7 +100,7 @@ async def add_host(request: Request):
     await col.insert_one(host)
 
     content = f"curl {request.url_for('install')} | bash {_id}"
-    return json_({'code': 0, 'message': '', data: content})
+    return json_({'code': 0, 'message': '', 'data': content})
 
 
 @app.get('/hosts')
