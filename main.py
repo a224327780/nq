@@ -22,7 +22,7 @@ col_hosts_name = 'hosts'
 @app.middleware('response')
 def add_cors_headers(request, response):
     headers = {
-        "Access-Control-Allow-Methods": "PUT, GET, POST, DELETE, OPTIONS",
+        "Access-Control-Allow-Methods": "HEAD PUT, GET, POST, DELETE, OPTIONS",
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Headers": 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token',
     }
@@ -60,14 +60,16 @@ async def install(request: Request):
     content_type = 'application/x-shellscript'
     api = request.url_for('agent').replace('http', 'https')
     content = Path('scripts/install.sh').read_text().replace('API="$2"', f'API="{api}"')
-    return text(f'{content}\n', content_type=content_type)
+    headers = {'accept-ranges': 'bytes'}
+    return text(f'{content}\n', content_type=content_type, headers=headers)
 
 
 @app.get("/uninstall")
 async def uninstall(request):
     content_type = 'application/x-shellscript'
+    headers = {'accept-ranges': 'bytes'}
     content = Path('scripts/uninstall.sh').read_text()
-    return text(content, content_type=content_type)
+    return text(content, content_type=content_type, headers=headers)
 
 
 @app.websocket("/ws")
