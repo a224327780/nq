@@ -14,8 +14,7 @@ from utils.log import DEFAULT_LOGGING
 from utils.version import VERSION
 
 app = Sanic("nq", log_config=DEFAULT_LOGGING)
-mongo_uri = os.getenv('MONGO_URI',
-                      'mongodb+srv://root:hack3321!@cluster0.9v4wz.mongodb.net/?retryWrites=true&w=majority')
+mongo_uri = os.getenv('MONGO_URI')
 col_host_name = 'host'
 col_hosts_name = 'hosts'
 
@@ -59,7 +58,7 @@ async def get_hosts():
 @app.get("/install")
 async def install(request: Request):
     content_type = 'application/x-shellscript'
-    api = request.url_for('agent')
+    api = request.url_for('agent').replace('http', 'https')
     content = Path('scripts/install.sh').read_text().replace('API="$2"', f'API="{api}"')
     return text(f'{content}\n', content_type=content_type)
 
