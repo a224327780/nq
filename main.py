@@ -95,10 +95,11 @@ async def add_host(request: Request):
     if data:
         return json_({'code': 1, 'message': f'{name} Already exists.', data: []})
 
-    host = {'name': name, 'id': _id}
+    host = {'name': name, '_id': _id}
     await col.insert_one(host)
 
-    content = f"curl {request.url_for('install')} | bash {_id}"
+    url = request.url_for('install').replace('http', 'https')
+    content = f"curl {url} | bash {_id}"
     return json_({'code': 0, 'message': '', 'data': content})
 
 
