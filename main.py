@@ -9,7 +9,7 @@ from sanic import Sanic, text, Request
 from sanic import json as json_
 from sanic.log import logger
 
-from utils.common import get_bj_time, decode, progress, is_online, m_date
+from utils.common import get_bj_time, progress, is_online, m_date
 from utils.log import DEFAULT_LOGGING
 from utils.version import VERSION
 
@@ -120,8 +120,10 @@ async def agent(request: Request):
     db = app.ctx.mongo_db
     col = db[col_host_name]
 
-    data = decode(request.form.get('data'))
+    data = request.form.get('data')
     token = request.form.get('token')
+    logger.info(data)
+    logger.info(token)
 
     day_1_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
     await col.delete_many({'token': token, 'create_date': {'$lt': f'{day_1_ago}'}})
@@ -135,10 +137,10 @@ async def agent(request: Request):
         19: 'ipv4', 20: 'ipv6', 21: 'rx', 22: 'tx', 23: 'load_cpu'}
     save_data = {'create_date': get_bj_time(), 'token': token}
     try:
-        for i, datum in enumerate(data.split('||')):
+        for i, datum in enumerate(data.split('|')):
             field = field_map.get(i)
             if field:
-                save_data[field] = decode(datum)
+                save_data[field] = datum
         await col.insert_one(save_data)
     except Exception as e:
         logger.exception(e)
