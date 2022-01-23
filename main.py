@@ -105,7 +105,7 @@ async def add_host(request: Request):
     await col.insert_one(host)
 
     url = request.url_for('install').replace('http', 'https')
-    content = f"curl {url} | bash {_id}"
+    content = f"curl {url} | bash -s {_id}"
     return json_({'code': 0, 'message': '', 'data': content})
 
 
@@ -119,11 +119,14 @@ async def hosts(request):
 async def agent(request: Request):
     db = app.ctx.mongo_db
     col = db[col_host_name]
+    col_hosts = db[col_hosts_name]
 
     data = request.form.get('data')
     token = request.form.get('token')
-    logger.info(data)
-    logger.info(token)
+
+    host = await col_hosts.find_one({'_id': token})
+    if not host:
+        return json_({'code': 1, 'data': [], 'message': f'hostId: {token} Not Found.'})
 
     day_1_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
     await col.delete_many({'token': token, 'create_date': {'$lt': f'{day_1_ago}'}})
@@ -144,6 +147,8 @@ async def agent(request: Request):
         await col.insert_one(save_data)
     except Exception as e:
         logger.exception(e)
+        return json_({'code': 1, 'data': [], 'message': str(e)})
+
     return json_({'code': 0, 'data': [], 'message': ''})
 
 
