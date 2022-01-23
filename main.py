@@ -137,7 +137,7 @@ async def agent(request: Request):
         8: 'cpu_name', 9: 'cpu_cores', 10: 'cpu_freq',
         11: 'ram_total', 12: 'ram_usage', 13: 'swap_total', 14: 'swap_usage',
         15: 'disk_total', 16: 'disk_usage', 17: 'connections', 18: 'nic',
-        19: 'ipv4', 20: 'ipv6', 21: 'rx', 22: 'tx', 23: 'load_cpu'}
+        19: 'ipv4', 20: 'ipv6', 21: 'rx', 22: 'tx', 23: 'load'}
     save_data = {'create_date': get_bj_time(), 'token': token}
     try:
         for i, datum in enumerate(data.split('|')):
