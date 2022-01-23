@@ -3,6 +3,8 @@
 # Set environment
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
+kill -9 `ps -ef| grep -i 'nq-agent' | grep -v grep| awk '{print $2}'`
+
 . nq-agent-env.sh
 
 # Prepare values
@@ -117,7 +119,7 @@ ipv6=$(prep "$(ip addr show $nic | grep 'inet6 ' | awk '{ print $2 }' | awk -F\/
 # ping_us=$(prep $(num "$(ping -c 2 -w 2 108.61.219.200 | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
 # ping_as=$(prep $(num "$(ping -c 2 -w 2 45.32.100.168 | grep rtt | cut -d'/' -f4 | awk '{ print $3 }')"))
 
-for((i=1;i<=30;i++));
+for((i=1;i<=60;i++));
 do
   # RAM usage
   ram_total=$(prep $(num "$(cat /proc/meminfo | grep ^MemTotal: | awk '{ print $2 }')"))
@@ -154,7 +156,7 @@ do
   data_post="data=$nq_version|$uptime|$sessions|$processes|$processes_array|$os_kernel|$os_name|$os_arch|$cpu_name|$cpu_cores|$cpu_freq|$ram_total|$ram_usage|$swap_total|$swap_usage|$disk_total|$disk_usage|$connections|$nic|$ipv4|$ipv6|$rx|$tx|$load&token=$nq_token"
 #  echo $data_post
   curl -s -d "$data_post" "$nq_api"
-  sleep 2
+  sleep 3
 done
 # Finished
 exit 1
