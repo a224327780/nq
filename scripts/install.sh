@@ -140,7 +140,7 @@ fi
 mkdir -p /etc/nodequery
 
 # Download agent
-echo -e "|   Downloading nq-agent.sh to /etc/nodequery\n|\n|   + $(curl -o /etc/nodequery/nq-agent.sh https://raw.githubusercontent.com/a224327780/nq/script/nq-agent.sh)"
+echo -e "|   Downloading nq-agent.sh to /etc/nodequery\n|\n|   + $(curl -o /etc/nodequery/nq-agent.sh https://raw.githubusercontent.com/a224327780/nq/master/scripts/nq-agent.sh)"
 
 if [ -f /etc/nodequery/nq-agent.sh ]
 then
@@ -161,11 +161,6 @@ EOF
 	# Show success
 	echo -e "|\n|   Success: The NodeQuery agent has been installed\n|"
 
-	# Attempt to delete installation script
-	if [ -f $0 ]
-	then
-		rm -f $0
-	fi
 else
 	# Show error
 	echo -e "|\n|   Error: The NodeQuery agent could not be installed\n|"
