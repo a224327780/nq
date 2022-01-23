@@ -1,6 +1,7 @@
 import hashlib
 import json
 import os
+import uuid
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -150,7 +151,7 @@ async def agent(request: Request):
             if field:
                 save_data[field] = datum
 
-        save_data['_id'] = md5(f'{token}_{data}')
+        save_data['_id'] = md5(str(uuid.uuid4()))
         await col.insert_one(save_data)
     except Exception as e:
         logger.exception(e)
