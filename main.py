@@ -22,9 +22,13 @@ col_hosts_name = 'hosts'
 @app.middleware('response')
 def add_cors_headers(request, response):
     headers = {
-        "Access-Control-Allow-Methods": "HEAD PUT, GET, POST, DELETE, OPTIONS",
+        "Access-Control-Allow-Methods": "PUT, GET, POST, DELETE, OPTIONS",
         "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Headers": 'Origin, Accept, Content-Type, X-Requested-With, X-CSRF-Token',
+        "Access-Control-Allow-Credentials": "true",
+        "Access-Control-Allow-Headers": (
+            "origin, content-type, accept, "
+            "authorization, x-xsrf-token, x-request-id"
+        ),
     }
     response.headers.extend(headers)
 
