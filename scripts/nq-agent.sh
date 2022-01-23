@@ -3,8 +3,6 @@
 # Set environment
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-kill -9 `ps -ef| grep -i 'nq-agent' | grep -v grep| awk '{print $2}'`
-
 . nq-agent-env.sh
 
 # Prepare values
