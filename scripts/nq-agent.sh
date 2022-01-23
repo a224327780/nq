@@ -3,9 +3,7 @@
 # Set environment
 PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
-nq_token="$1"
-nq_api="https://nq-atlinbing.cloud.okteto.net/agent"
-nq_version="1.0"
+. nq-agent-env.sh
 
 # Prepare values
 prep() {
