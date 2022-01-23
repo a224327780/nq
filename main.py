@@ -19,6 +19,12 @@ col_host_name = 'host'
 col_hosts_name = 'hosts'
 
 
+def md5(s):
+    m = hashlib.md5()
+    m.update(s.encode('utf-8'))
+    return m.hexdigest().upper()
+
+
 @app.middleware('response')
 def add_cors_headers(request, response):
     headers = {
@@ -50,6 +56,7 @@ async def get_hosts():
         if not host_item:
             continue
 
+        host_item.pop('_id')
         host_item['ram_gap'] = progress(host_item['ram_usage'], host_item['ram_total'])
         host_item['disk_gap'] = progress(host_item['disk_usage'], host_item['disk_total'])
         host_item['load_gap'] = progress(host_item['load'].split(' ')[0], host_item['cpu_cores'])
@@ -91,9 +98,7 @@ async def home(request: Request):
 @app.post('/add')
 async def add_host(request: Request):
     name = request.form.get('name')
-    m = hashlib.md5()
-    m.update(name.encode('utf-8'))
-    _id = m.hexdigest().upper()
+    _id = md5(name)
 
     db = app.ctx.mongo_db
     col = db[col_hosts_name]
@@ -144,6 +149,8 @@ async def agent(request: Request):
             field = field_map.get(i)
             if field:
                 save_data[field] = datum
+
+        save_data['_id'] = md5(f'{token}_{data}')
         await col.insert_one(save_data)
     except Exception as e:
         logger.exception(e)
