@@ -65,7 +65,8 @@ async def get_hosts():
         host_item['m_date'] = m_date(host_item['create_date'])
         host_item['rx'] = format_size(host_item['rx'])
         host_item['tx'] = format_size(host_item['tx'])
-        host_item.update(item)
+        host_item['_id'] = _id
+        host_item['name'] = item['name']
         data.append(host_item)
     return {'code': 0, 'data': data, 'message': ''}
 
