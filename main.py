@@ -137,7 +137,7 @@ async def agent(request: Request):
     if not host:
         return json_({'code': 1, 'data': [], 'message': f'hostId: {token} Not Found.'})
 
-    day_1_ago = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d %H:%M:%S")
+    day_1_ago = (datetime.now() - timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S")
     await col.delete_many({'token': token, 'create_date': {'$lt': f'{day_1_ago}'}})
 
     field_map = {
