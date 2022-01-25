@@ -10,7 +10,7 @@ from sanic import Sanic, text, Request
 from sanic import json as json_
 from sanic.log import logger
 
-from utils.common import get_bj_time, progress, is_online, m_date
+from utils.common import get_bj_time, progress, is_online, m_date, format_size
 from utils.log import DEFAULT_LOGGING
 from utils.version import VERSION
 
@@ -63,6 +63,9 @@ async def get_hosts():
         host_item['load_gap'] = progress(host_item['load'].split(' ')[0], host_item['cpu_cores'])
         host_item['is_online'] = is_online(host_item['create_date'])
         host_item['m_date'] = m_date(host_item['create_date'])
+        host_item['rx'] = format_size(host_item['rx'])
+        host_item['tx'] = format_size(host_item['tx'])
+        host_item.update(item)
         data.append(host_item)
     return {'code': 0, 'data': data, 'message': ''}
 

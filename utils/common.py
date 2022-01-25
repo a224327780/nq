@@ -45,3 +45,12 @@ def m_date(last_date):
 def progress(a, b, c=100):
     n = round((float(a) / float(b)) * c, 2)
     return 100 if n > 100 else n
+
+
+def format_size(size_bytes):
+    if size_bytes == 0:
+        return "0B"
+    size_name = ("B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB")
+    i = int(math.floor(math.log(size_bytes, 1024)))
+    p = math.pow(1024, i)
+    return f'{round(size_bytes / p, 2)} {size_name[i]}'
