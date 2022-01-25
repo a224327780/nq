@@ -63,10 +63,9 @@ async def get_hosts():
         host_item['load_gap'] = progress(host_item['load'].split(' ')[0], host_item['cpu_cores'])
         host_item['is_online'] = is_online(host_item['create_date'])
         host_item['m_date'] = m_date(host_item['create_date'])
-        host_item['rx'] = format_size(host_item['rx'])
-        host_item['tx'] = format_size(host_item['tx'])
-        host_item['_id'] = _id
-        host_item['name'] = item['name']
+        host_item['rx'] = format_size(int(host_item['rx']))
+        host_item['tx'] = format_size(int(host_item['tx']))
+        host_item.update(item)
         data.append(host_item)
     return {'code': 0, 'data': data, 'message': ''}
 
