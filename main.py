@@ -62,7 +62,10 @@ async def get_hosts():
         host_item['disk_gap'] = progress(host_item['disk_usage'], host_item['disk_total'])
         host_item['load_gap'] = progress(host_item['load'].split(' ')[0], host_item['cpu_cores'])
         host_item['is_online'] = is_online(host_item['create_date']) if host_item['create_date'] else True
-        host_item['m_date'] = m_date(host_item['create_date']) if host_item['create_date'] else ''
+        try:
+            host_item['m_date'] = m_date(host_item['create_date'])
+        except Exception as e:
+            host_item['m_date'] = host_item['create_date']
         host_item['rx'] = format_size(int(host_item['rx'])) if host_item['rx'] else ''
         host_item['tx'] = format_size(int(host_item['tx'])) if host_item['tx'] else ''
         host_item.update(item)
